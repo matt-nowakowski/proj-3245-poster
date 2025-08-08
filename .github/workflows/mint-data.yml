@@ -28,23 +28,24 @@ jobs:
         with:
           node-version: '18' # Use a recent, stable version
 
-      # Step 3: Install dependencies and run the script.
-      # We combine these in one step for a self-contained environment.
-      - name: Generate and Mint Data
+      # Step 3: Install dependencies and create the script file.
+      - name: Install Dependencies and Prepare Script
         run: |
           # Install the node-fetch package.
           npm install node-fetch
           
-          # Execute the JavaScript code using the node interpreter.
-          node <<'EOF'
+          # Create a separate script file with an .mjs extension to enable ES Modules.
+          # The script is written to a file named 'mint-script.mjs'.
+          # Using 'EOF' to write a multi-line string to a file.
+          cat <<'EOF' > mint-script.mjs
+          import fetch from 'node-fetch';
+
           const API_URL = 'https://aventus-data-service.vercel.app/api/submit-data';
           
           // Define the number of mints to perform in this single run.
           // This is now a random number between 10 and 20.
           const MINTS_PER_RUN = Math.floor(Math.random() * (20 - 10 + 1)) + 10;
           
-          const fetch = require('node-fetch'); // Import fetch for making HTTP requests
-
           // Helper function to generate a random SHA256-like hash string.
           function generateRandomHash() {
             return [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -91,3 +92,7 @@ jobs:
           // Execute the main function.
           mintData();
           EOF
+
+      # Step 4: Run the prepared script.
+      - name: Run Mint Script
+        run: node mint-script.mjs
