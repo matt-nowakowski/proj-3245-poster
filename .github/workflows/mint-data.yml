@@ -18,9 +18,25 @@ jobs:
   mint-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate Hash and Mint Data
-        # We'll use a direct Node.js script within the action to avoid creating a separate file.
+      # Step 1: Check out the repository. This is a best practice.
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Use a recent, stable version
+
+      # Step 3: Install dependencies and run the script.
+      # We combine these in one step for a self-contained environment.
+      - name: Generate and Mint Data
         run: |
+          # Install the node-fetch package.
+          npm install node-fetch
+          
+          # Execute the JavaScript code using the node interpreter.
+          node <<'EOF'
           const API_URL = 'https://aventus-data-service.vercel.app/api/submit-data';
           
           // Define the number of mints to perform in this single run.
@@ -74,3 +90,4 @@ jobs:
 
           // Execute the main function.
           mintData();
+          EOF
