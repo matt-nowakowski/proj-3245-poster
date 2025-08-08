@@ -84,8 +84,8 @@ jobs:
               }
               
               // Add a small delay between requests to avoid overwhelming the service.
-              // This has been updated to 10 seconds (10000ms).
-              await new Promise(resolve => setTimeout(resolve, 10000));
+              // This has been updated to 30 seconds (30000ms).
+              await new Promise(resolve => setTimeout(resolve, 30000));
             }
           }
 
