@@ -1,0 +1,76 @@
+# This workflow automates the process of minting NFTs on the Aventus network.
+# It simulates posting warehouse inventory data by generating random data hashes
+# and using a static data owner name, then submitting them to your API endpoint.
+
+name: Automated NuurMX Aventus Data Mint
+
+on:
+  # The `schedule` trigger allows this workflow to run at specific times.
+  # This cron expression `0 * * * *` means the workflow will run
+  # at minute 0 of every hour, every day.
+  schedule:
+    - cron: '0 * * * *'
+  
+  # The `workflow_dispatch` trigger enables a manual run button in the GitHub UI.
+  workflow_dispatch:
+
+jobs:
+  mint-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Hash and Mint Data
+        # We'll use a direct Node.js script within the action to avoid creating a separate file.
+        run: |
+          const API_URL = 'https://aventus-data-service.vercel.app/api/submit-data';
+          
+          // Define the number of mints to perform in this single run.
+          // This is now a random number between 10 and 20.
+          const MINTS_PER_RUN = Math.floor(Math.random() * (20 - 10 + 1)) + 10;
+          
+          const fetch = require('node-fetch'); // Import fetch for making HTTP requests
+
+          // Helper function to generate a random SHA256-like hash string.
+          function generateRandomHash() {
+            return [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+          }
+          
+          // The data owner is now a static value as requested.
+          const walletAddress = 'NuurMX';
+
+          async function mintData() {
+            console.log(`This run will perform ${MINTS_PER_RUN} mints.`);
+            for (let i = 0; i < MINTS_PER_RUN; i++) {
+              const dataHash = generateRandomHash();
+              
+              console.log(`Submitting mint request ${i + 1}/${MINTS_PER_RUN} with:`);
+              console.log(`  Data Hash: ${dataHash}`);
+              console.log(`  Data Owner: ${walletAddress}`);
+
+              try {
+                const response = await fetch(API_URL, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ dataHash, walletAddress }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                  console.log(`✅ Success! Request ID: ${result.requestId}`);
+                } else {
+                  console.error(`❌ Error submitting data: ${result.error}`);
+                }
+              } catch (error) {
+                console.error(`❌ Fetch failed: ${error.message}`);
+              }
+              
+              // Add a small delay between requests to avoid overwhelming the service.
+              // This has been updated to 1 second (1000ms).
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+
+          // Execute the main function.
+          mintData();
